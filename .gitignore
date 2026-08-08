@@ -1,0 +1,13 @@
+# Machine-local Neovim files
+.DS_Store
+*.log
+*.tmp
+.nvim/
+Session.vim
+
+# Private project integrations
+/lua/ajhahnde/
+/compiler/flash.vim
+/ftdetect/flash.vim
+/ftplugin/flash.vim
+/syntax/flash.vim
