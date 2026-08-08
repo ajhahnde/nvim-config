@@ -8,7 +8,7 @@ Personal Neovim configuration based on [NvChad](https://nvchad.com/) and
 Back up an existing configuration, then clone this repository:
 
 ```sh
-git clone <repository-url> ~/.config/nvim
+git clone https://github.com/ajhahnde/nvim-config.git ~/.config/nvim
 nvim
 ```
 
