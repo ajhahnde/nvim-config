@@ -17,17 +17,21 @@ local FUNCTION_TYPES = {
 local cache = {} -- bufnr -> { tick, level = {[lnum]=depth}, starts = {[lnum]=depth} }
 
 local function compute(bufnr)
+  local tick = vim.api.nvim_buf_get_changedtick(bufnr)
+
+  -- Cache an empty result too. Returning nil here would make foldexpr retry the
+  -- same failed/disabled parser lookup once per line during every fold pass.
   if vim.api.nvim_buf_line_count(bufnr) > 10000 then
-    return nil
+    return { tick = tick, level = {}, starts = {} }
   end
   local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok or not parser then
-    return nil
+    return { tick = tick, level = {}, starts = {} }
   end
   local trees = parser:parse()
   local root = trees[1] and trees[1]:root()
   if not root then
-    return nil
+    return { tick = tick, level = {}, starts = {} }
   end
 
   local nlines = vim.api.nvim_buf_line_count(bufnr)
@@ -50,7 +54,7 @@ local function compute(bufnr)
   end
 
   walk(root, 0)
-  return { tick = vim.api.nvim_buf_get_changedtick(bufnr), level = level, starts = starts }
+  return { tick = tick, level = level, starts = starts }
 end
 
 function M.clear_cache(bufnr)
@@ -67,10 +71,6 @@ function M.foldexpr()
     c = compute(bufnr)
     cache[bufnr] = c
   end
-  if not c then
-    return "0"
-  end
-
   if c.starts[lnum] then
     return ">" .. c.starts[lnum]
   end

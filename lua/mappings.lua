@@ -2,6 +2,26 @@ require "nvchad.mappings"
 
 local map = vim.keymap.set
 
+local source_search_exclusions = {
+  ".git",
+  ".venv",
+  "target",
+  "build",
+  "dist",
+  "node_modules",
+  ".terraform",
+  ".next",
+  ".direnv",
+  "coverage",
+}
+
+local function source_search_args(args)
+  for _, dir in ipairs(source_search_exclusions) do
+    vim.list_extend(args, { "--glob", "!**/" .. dir .. "/**" })
+  end
+  return args
+end
+
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<ESC>")
 
@@ -16,39 +36,19 @@ map("n", "<leader>st", "<CMD>TodoTelescope<CR>", { desc = "Search TODOs" })
 
 map("n", "<leader>fF", function()
   require("telescope.builtin").find_files {
-    find_command = {
+    find_command = source_search_args {
       "rg",
       "--files",
       "--hidden",
       "--no-ignore",
-      "--glob",
-      "!**/.git/**",
-      "--glob",
-      "!**/.venv/**",
-      "--glob",
-      "!**/target/**",
-      "--glob",
-      "!**/build/**",
-      "--glob",
-      "!**/dist/**",
     },
   }
 end, { desc = "Find all source files (including ignored)" })
 map("n", "<leader>fW", function()
   require("telescope.builtin").live_grep {
-    additional_args = {
+    additional_args = source_search_args {
       "--hidden",
       "--no-ignore",
-      "--glob",
-      "!**/.git/**",
-      "--glob",
-      "!**/.venv/**",
-      "--glob",
-      "!**/target/**",
-      "--glob",
-      "!**/build/**",
-      "--glob",
-      "!**/dist/**",
     },
   }
 end, { desc = "Grep all source files (including ignored)" })

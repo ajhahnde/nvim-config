@@ -101,11 +101,8 @@ return {
 
   {
     "stevearc/oil.nvim",
-    lazy = false,
+    cmd = "Oil",
     opts = {},
-    config = function(_, opts)
-      require("oil").setup(opts)
-    end,
   },
 
   {
@@ -117,7 +114,6 @@ return {
 
   {
     "folke/flash.nvim",
-    event = "VeryLazy",
     opts = {},
     keys = {
       {
@@ -166,7 +162,7 @@ return {
 
   {
     "3rd/image.nvim",
-    event = "VeryLazy",
+    ft = { "markdown", "vimwiki" },
     opts = {
       backend = "kitty",
       integrations = {
@@ -228,6 +224,8 @@ return {
 
   {
     "nvim-treesitter/nvim-treesitter",
+    -- The current main branch does not support lazy-loading.
+    lazy = false,
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
       vim.list_extend(opts.ensure_installed, {
@@ -238,6 +236,7 @@ return {
         "gomod",
         "python",
         "c",
+        "cpp",
         "bash",
         "markdown",
         "markdown_inline",
@@ -379,10 +378,10 @@ return {
         -- NOT here: it is Godot's own editor server on :6005 (see lspconfig).
         "gdtoolkit",
         "lemminx",
-        -- Systems / low-level: C/C++ LSP + formatter, Rust LSP.
+        -- Systems / low-level: C/C++ LSP + formatter. rust-analyzer comes
+        -- from rustup so project-local rust-toolchain files are honored.
         "clangd",
         "clang-format",
-        "rust-analyzer",
       },
       run_on_start = true,
       start_delay = 3000,
@@ -405,7 +404,7 @@ return {
         dockerfile = { "hadolint" },
         terraform = { "tflint" },
         tf = { "tflint" },
-        ["ansible.yaml"] = { "ansible_lint" },
+        ["yaml.ansible"] = { "ansible_lint" },
       }
       local group = vim.api.nvim_create_augroup("UserLint", { clear = true })
       vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {

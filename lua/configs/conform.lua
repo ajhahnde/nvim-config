@@ -6,6 +6,7 @@ local options = {
     html = { "prettier" },
     -- Web and data formats
     javascript = { "prettier" },
+    javascriptreact = { "prettier" },
     json = { "prettier" },
     jsonc = { "prettier" },
     yaml = { "prettier" },

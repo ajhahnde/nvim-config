@@ -67,7 +67,13 @@ vim.lsp.config("bashls", {
 })
 
 -- Use the workspace's rustup toolchain and run Clippy through rust-analyzer.
+-- Mason prepends its bin directory to $PATH, so resolve rust-analyzer next to
+-- the rustup executable explicitly. The proxy then honors rust-toolchain files.
+local rustup = vim.fn.exepath "rustup"
+local rust_analyzer = rustup ~= "" and vim.fs.joinpath(vim.fs.dirname(rustup), "rust-analyzer") or "rust-analyzer"
+
 vim.lsp.config("rust_analyzer", {
+  cmd = { rust_analyzer },
   settings = {
     ["rust-analyzer"] = {
       check = {

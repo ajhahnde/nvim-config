@@ -11,8 +11,10 @@ o.mousescroll = "ver:1,hor:4"
 -- Fold functions only (not classes/blocks/ifs) via custom treesitter
 -- foldexpr, see configs/functionfold.lua. foldlevel=99 keeps everything
 -- open on load; toggle-all mapping lives in mappings.lua (<leader>zz).
+local functionfold = require "configs.functionfold"
+_G.UserFunctionFoldExpr = functionfold.foldexpr
 o.foldmethod = "expr"
-o.foldexpr = "v:lua.require'configs.functionfold'.foldexpr()"
+o.foldexpr = "v:lua.UserFunctionFoldExpr()"
 o.foldlevel = 99
 o.foldenable = true
 

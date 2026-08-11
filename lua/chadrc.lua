@@ -141,9 +141,8 @@ M.ui = {
         local elapsed = os.time() - session_start
         local h = math.floor(elapsed / 3600)
         local m = math.floor(elapsed % 3600 / 60)
-        local s = elapsed % 60
         local icon = "%#St_session_icon#" .. "󰔛 "
-        local text = string.format("%%#St_session_text# %02d:%02d:%02d ", h, m, s)
+        local text = string.format("%%#St_session_text# %02d:%02d ", h, m)
         return "%#St_session_sep#" .. "\238\130\182" .. icon .. text
       end,
     },

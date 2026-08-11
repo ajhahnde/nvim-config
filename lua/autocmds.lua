@@ -16,7 +16,7 @@ vim.api.nvim_create_autocmd("FileType", {
     end
 
     vim.opt_local.foldmethod = "expr"
-    vim.opt_local.foldexpr = "v:lua.require'configs.functionfold'.foldexpr()"
+    vim.opt_local.foldexpr = "v:lua.UserFunctionFoldExpr()"
     vim.opt_local.foldlevel = 99
     vim.opt_local.foldenable = true
     vim.opt_local.foldcolumn = "1"
@@ -35,12 +35,12 @@ vim.api.nvim_create_autocmd({ "TextChanged", "BufWritePost", "InsertLeave" }, {
   end,
 })
 
--- Tick the statusline `clock` module (chadrc.lua) once a second so it shows
--- real time instead of only refreshing on the redraws above.
+-- Tick the statusline time modules once a minute. They only display minute
+-- precision, so a per-second redraw would waste idle work.
 local clock_timer = assert(vim.uv.new_timer())
 clock_timer:start(
   0,
-  1000,
+  60000,
   vim.schedule_wrap(function()
     if vim.v.exiting == vim.NIL then
       vim.cmd.redrawstatus()
