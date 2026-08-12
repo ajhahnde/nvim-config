@@ -1,14 +1,6 @@
 ---@type ChadrcConfig
 local M = {}
 
-local private_dashboard = {}
-do
-  local ok, config = pcall(require, "ajhahnde.dashboard")
-  if ok then
-    private_dashboard = config
-  end
-end
-
 -- Timestamp when this config loaded == when the nvim session started; used
 -- by the `session` statusline module below to show elapsed time.
 local session_start = os.time()
@@ -219,17 +211,7 @@ M.nvdash = {
       { txt = "󰸗  " .. os.date "%A, %d. %B %Y" .. "   󱑊  " .. os.date "%H:%M", hl = "NvdashAscii" }
     )
 
-    -- Abstand zwischen Datum und Projekt-Shortcuts
-    for i = 1, 2 do
-      table.insert(btns, { txt = " ", no_gap = true })
-    end
-
-    -- Optional machine-local project shortcuts.
-    if private_dashboard.project_buttons then
-      table.insert(btns, private_dashboard.project_buttons)
-    end
-
-    -- Restlicher Abstand bis zu den Buttons (reduziert)
+    -- Abstand bis zu den Buttons
     for i = 1, 2 do
       table.insert(btns, { txt = " ", no_gap = true })
     end

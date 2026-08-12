@@ -20,6 +20,6 @@ reproducible across machines.
 
 ## Local configuration
 
-Project-specific commands, paths, filetypes, and dashboard shortcuts are kept
-in ignored files. The public configuration loads these additions only when they
-exist, so a fresh clone works without them.
+Project-specific commands, paths, and filetypes are kept in ignored files. The
+public configuration loads these additions only when they exist, so a fresh
+clone works without them.
