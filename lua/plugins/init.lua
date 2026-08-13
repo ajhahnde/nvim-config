@@ -140,7 +140,14 @@ return {
     event = "VeryLazy",
     dependencies = {
       "MunifTanjim/nui.nvim",
-      "rcarriga/nvim-notify",
+      {
+        "rcarriga/nvim-notify",
+        opts = {
+          -- Transparency removes NotifyBackground's bg value, but notify's
+          -- fade stages still need the actual terminal background for blending.
+          background_colour = "#1c1e26",
+        },
+      },
     },
     opts = {
       lsp = {
