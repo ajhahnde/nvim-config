@@ -3,9 +3,9 @@ return {
   install = { colorscheme = { "nvchad" } },
 
   checker = {
-    enabled = true, -- automatically check for plugin updates
-    notify = true, -- get a notification when updates are available
-    frequency = 3600, -- check every hour (in seconds)
+    -- Updates are installed automatically once a day by configs.autoupdate.
+    -- A separate checker would duplicate the same network request at startup.
+    enabled = false,
   },
 
   ui = {

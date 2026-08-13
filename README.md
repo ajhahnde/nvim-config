@@ -14,6 +14,8 @@ nvim
 
 Neovim installs the configured plugins on first launch. External language
 servers, formatters, and linters are managed through Mason where configured.
+Plugins (including Tree-sitter parsers) and Mason tools are updated
+automatically in the background, at most once every 24 hours.
 
 `lazy-lock.json` is committed intentionally so plugin versions stay
 reproducible across machines.

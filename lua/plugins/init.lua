@@ -112,6 +112,83 @@ return {
     opts = {},
   },
 
+  -- Project-wide search and replace with an editable diff preview.
+  {
+    "MagicDuck/grug-far.nvim",
+    cmd = { "GrugFar", "GrugFarWithin" },
+    opts = {},
+    keys = {
+      {
+        "<leader>sr",
+        function()
+          require("grug-far").open()
+        end,
+        desc = "Search and replace project",
+      },
+      {
+        "<leader>sr",
+        function()
+          require("grug-far").with_visual_selection()
+        end,
+        mode = "x",
+        desc = "Search and replace selection",
+      },
+    },
+  },
+
+  -- Add, change and delete surrounding quotes, brackets and tags via
+  -- ys{motion}{char}, cs{old}{new} and ds{char}.
+  {
+    "kylechui/nvim-surround",
+    event = "VeryLazy",
+    opts = {},
+  },
+
+  -- Automatically close and rename paired HTML/Astro/JSX/TSX/XML tags.
+  {
+    "windwp/nvim-ts-autotag",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {},
+  },
+
+  -- Save sessions automatically per project and Git branch. Restoring stays
+  -- explicit so opening a single file never unexpectedly replaces the layout.
+  {
+    "folke/persistence.nvim",
+    event = "BufReadPre",
+    opts = {},
+    keys = {
+      {
+        "<leader>ps",
+        function()
+          require("persistence").load()
+        end,
+        desc = "Project session restore",
+      },
+      {
+        "<leader>pS",
+        function()
+          require("persistence").select()
+        end,
+        desc = "Project session select",
+      },
+      {
+        "<leader>pl",
+        function()
+          require("persistence").load { last = true }
+        end,
+        desc = "Project session restore last",
+      },
+      {
+        "<leader>pd",
+        function()
+          require("persistence").stop()
+        end,
+        desc = "Project session stop saving",
+      },
+    },
+  },
+
   {
     "folke/flash.nvim",
     opts = {},
@@ -390,6 +467,7 @@ return {
         "clangd",
         "clang-format",
       },
+      auto_update = true,
       run_on_start = true,
       start_delay = 3000,
       debounce_hours = 24,
