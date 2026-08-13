@@ -1,9 +1,43 @@
 ---@type ChadrcConfig
 local M = {}
 
--- Timestamp when this config loaded == when the nvim session started; used
--- by the `session` statusline module below to show elapsed time.
-local session_start = os.time()
+-- Statusline modules are rendered for every window, including narrow vertical
+-- splits. `vim.o.columns` is the width of the whole editor and therefore does
+-- not tell us how much room a particular statusline has. Use the window for
+-- which Neovim is currently evaluating the statusline instead.
+local function statusline_width()
+  local win = tonumber(vim.g.statusline_winid)
+  if win and vim.api.nvim_win_is_valid(win) then
+    return vim.api.nvim_win_get_width(win)
+  end
+
+  return vim.o.columns
+end
+
+local function shorten(text, max_width)
+  if vim.fn.strdisplaywidth(text) <= max_width then
+    return text
+  end
+
+  local suffix = vim.fn.fnamemodify(text, ":e")
+  suffix = suffix ~= "" and "." .. suffix or ""
+  local suffix_width = vim.fn.strdisplaywidth(suffix)
+  if suffix_width >= max_width - 1 then
+    suffix = ""
+    suffix_width = 0
+  end
+
+  local target = max_width - suffix_width - 1
+  local head = ""
+  for char in text:gmatch "[\1-\127\194-\244][\128-\191]*" do
+    if vim.fn.strdisplaywidth(head .. char) > target then
+      break
+    end
+    head = head .. char
+  end
+
+  return head .. "…" .. suffix
+end
 
 M.base46 = {
   theme = "onedark",
@@ -12,36 +46,30 @@ M.base46 = {
     onedark = {
       -- hl_override only recolors highlight groups that already exist in the
       -- statusline defaults; it silently no-ops on brand-new group names
-      -- (St_modified, St_git*, St_clock) since they aren't in that base set.
+      -- (St_modified, St_git*, St_muted) since they aren't in that base set.
       -- polish_hl merges unconditionally, so new groups actually get created.
       polish_hl = {
         statusline = {
           -- With transparency=true, base46 sets statusline_bg to NONE for the
           -- whole bar; these overrides give the statusline its own solid strip
-          -- (#2c313a) so it stays visible against the terminal background
+          -- so it stays visible against the terminal background
           -- while the editor above remains transparent.
-          StatusLine = { bg = "#343a46" },
-          St_gitIcons = { fg = "#9a86fd", bg = "#343a46", bold = true },
-          St_Lsp = { fg = "#61afef", bg = "#343a46" },
-          St_LspMsg = { fg = "#98c379", bg = "#343a46" },
-          St_lspError = { fg = "#e06c75", bg = "#343a46" },
-          St_lspWarning = { fg = "#e5c07b", bg = "#343a46" },
-          St_LspHints = { fg = "#9a86fd", bg = "#343a46" },
-          St_LspInfo = { fg = "#98c379", bg = "#343a46" },
-          St_file = { fg = "#61afef", bg = "#313640" },
-          St_file_sep = { fg = "#313640", bg = "#343a46" },
-          St_cwd_text = { fg = "#e06c75", bg = "#313640" },
-          St_cwd_sep = { fg = "#e06c75", bg = "#343a46" },
-          St_modified = { fg = "#d19a66", bg = "#343a46" },
-          St_gitAdded = { fg = "#98c379", bg = "#343a46" },
-          St_gitChanged = { fg = "#e5c07b", bg = "#343a46" },
-          St_gitRemoved = { fg = "#e06c75", bg = "#343a46" },
-          St_session_icon = { fg = "#2c313a", bg = "#c678dd" },
-          St_session_text = { fg = "#c678dd", bg = "#313640" },
-          St_session_sep = { fg = "#c678dd", bg = "#343a46" },
-          St_clock_icon = { fg = "#2c313a", bg = "#66b2ff" },
-          St_clock_text = { fg = "#66b2ff", bg = "#313640" },
-          St_clock_sep = { fg = "#66b2ff", bg = "#343a46" },
+          StatusLine = { fg = "#abb2bf", bg = "#242832" },
+          StatusLineNC = { fg = "#545862", bg = "#20242d" },
+          St_file = { fg = "#abb2bf", bg = "#242832", bold = true },
+          St_modified = { fg = "#d19a66", bg = "#242832" },
+          St_gitIcons = { fg = "#9a86fd", bg = "#242832" },
+          St_gitAdded = { fg = "#98c379", bg = "#242832" },
+          St_gitChanged = { fg = "#e5c07b", bg = "#242832" },
+          St_gitRemoved = { fg = "#e06c75", bg = "#242832" },
+          St_Lsp = { fg = "#61afef", bg = "#242832" },
+          St_LspMsg = { fg = "#98c379", bg = "#242832", italic = true },
+          St_lspError = { fg = "#e06c75", bg = "#242832" },
+          St_lspWarning = { fg = "#e5c07b", bg = "#242832" },
+          St_LspHints = { fg = "#9a86fd", bg = "#242832" },
+          St_LspInfo = { fg = "#98c379", bg = "#242832" },
+          St_muted = { fg = "#7f848e", bg = "#242832" },
+          St_position = { fg = "#1c1e26", bg = "#66b2ff", bold = true },
         },
       },
       base_30 = {
@@ -71,7 +99,7 @@ M.base46 = {
         teal = "#66b2ff", -- Our sky blue
         cyan = "#66b2ff", -- Our sky blue
         orange = "#d19a66",
-        statusline_bg = "#343a46",
+        statusline_bg = "#242832",
         lightbg = "#313640",
         pmenu_bg = "#9a86fd",
         folder_bg = "#61afef",
@@ -83,29 +111,52 @@ M.base46 = {
 M.ui = {
   statusline = {
     theme = "default",
-    separator_style = "round",
+    separator_style = "block",
     order = {
       "mode",
       "file",
-      "git",
       "modified",
+      "git",
       "%=",
       "lsp_msg",
       "%=",
       "diagnostics",
       "lsp",
-      "session",
       "clock",
-      "cwd",
       "cursor",
     },
     modules = {
+      mode = function()
+        local utils = require "nvchad.stl.utils"
+        if not utils.is_activewin() then
+          return ""
+        end
+
+        local mode = vim.api.nvim_get_mode().mode
+        local mode_data = utils.modes[mode] or { mode:upper(), "Normal" }
+        local label = mode_data[1]:sub(1, 1)
+        local hl = mode_data[2]
+        return "%#St_" .. hl .. "Mode# " .. label .. " %#StatusLine# "
+      end,
+      file = function()
+        local file = require("nvchad.stl.utils").file()
+        local width = statusline_width()
+        local max_name_width = width < 50 and 8 or width < 70 and 12 or width < 100 and 18 or 28
+        local name = shorten(file[2], max_name_width)
+        return "%#St_file#" .. file[1] .. " " .. name
+      end,
       modified = function()
-        return vim.bo.modified and "%#St_modified#  " or ""
+        local bufnr = require("nvchad.stl.utils").stbufnr()
+        return vim.bo[bufnr].modified and "%#St_modified# ●" or ""
       end,
       git = function()
         local utils = require "nvchad.stl.utils"
         local bufnr = utils.stbufnr()
+
+        local width = statusline_width()
+        if width < 70 then
+          return ""
+        end
 
         if not vim.b[bufnr].gitsigns_head or vim.b[bufnr].gitsigns_git_status then
           return ""
@@ -113,29 +164,81 @@ M.ui = {
 
         local git_status = vim.b[bufnr].gitsigns_status_dict
 
-        local added = (git_status.added and git_status.added ~= 0) and ("%#St_gitAdded#  " .. git_status.added) or ""
-        local changed = (git_status.changed and git_status.changed ~= 0)
-            and ("%#St_gitChanged#  " .. git_status.changed)
+        local show_counts = width >= 95
+        local added = show_counts
+            and (git_status.added and git_status.added ~= 0)
+            and ("%#St_gitAdded# +" .. git_status.added)
           or ""
-        local removed = (git_status.removed and git_status.removed ~= 0)
-            and ("%#St_gitRemoved#  " .. git_status.removed)
+        local changed = show_counts
+            and (git_status.changed and git_status.changed ~= 0)
+            and ("%#St_gitChanged# ~" .. git_status.changed)
           or ""
-        local branch_name = "%#St_gitIcons# " .. git_status.head
+        local removed = show_counts
+            and (git_status.removed and git_status.removed ~= 0)
+            and ("%#St_gitRemoved# -" .. git_status.removed)
+          or ""
+        local branch_name = "%#St_gitIcons#   " .. shorten(git_status.head, width < 95 and 10 or 18)
 
-        return " " .. branch_name .. added .. changed .. removed
+        return branch_name .. added .. changed .. removed
+      end,
+      lsp_msg = function()
+        if statusline_width() < 105 then
+          return ""
+        end
+
+        return "%#St_LspMsg#" .. require("nvchad.stl.utils").lsp_msg()
+      end,
+      diagnostics = function()
+        if statusline_width() < 65 then
+          return ""
+        end
+
+        local bufnr = require("nvchad.stl.utils").stbufnr()
+        local severity = vim.diagnostic.severity
+        local counts = {
+          { severity.ERROR, "St_lspError", "" },
+          { severity.WARN, "St_lspWarning", "" },
+          { severity.HINT, "St_LspHints", "󰌵" },
+          { severity.INFO, "St_LspInfo", "󰋼" },
+        }
+        local result = {}
+
+        for _, item in ipairs(counts) do
+          local count = #vim.diagnostic.get(bufnr, { severity = item[1] })
+          if count > 0 then
+            result[#result + 1] = "%#" .. item[2] .. "# " .. item[3] .. " " .. count
+          end
+        end
+
+        return table.concat(result)
+      end,
+      lsp = function()
+        local width = statusline_width()
+        if width < 80 or not rawget(vim, "lsp") then
+          return ""
+        end
+
+        local bufnr = require("nvchad.stl.utils").stbufnr()
+        for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr }) do
+          local name = width >= 110 and " " .. client.name or ""
+          return "%#St_Lsp#  󰒋" .. name
+        end
+
+        return ""
       end,
       clock = function()
-        local icon = "%#St_clock_icon#" .. "󰥔 "
-        local text = "%#St_clock_text#" .. " " .. os.date "%H:%M" .. " "
-        return "%#St_clock_sep#" .. "\238\130\182" .. icon .. text
+        if statusline_width() < 75 then
+          return ""
+        end
+
+        return "%#St_muted#  " .. os.date "%H:%M" .. " "
       end,
-      session = function()
-        local elapsed = os.time() - session_start
-        local h = math.floor(elapsed / 3600)
-        local m = math.floor(elapsed % 3600 / 60)
-        local icon = "%#St_session_icon#" .. "󰔛 "
-        local text = string.format("%%#St_session_text# %02d:%02d ", h, m)
-        return "%#St_session_sep#" .. "\238\130\182" .. icon .. text
+      cursor = function()
+        if statusline_width() < 45 then
+          return "%#St_position# %l "
+        end
+
+        return "%#St_position# %l:%v "
       end,
     },
   },
