@@ -36,6 +36,15 @@ vim.list_extend(servers, { "gdscript", "lemminx" })
 vim.list_extend(servers, { "astro" })
 -- Systems / low-level: C/C++ (clangd handles both; also covers .h/.S files).
 vim.list_extend(servers, { "clangd" })
+-- Flash (`fsh`) uses the locally installed standalone stdio server. It does
+-- not need workspace settings and intentionally does not execute source code.
+vim.list_extend(servers, { "flash" })
+
+vim.lsp.config("flash", {
+  cmd = { "flash-language-server" },
+  filetypes = { "flash" },
+  root_markers = { ".git" },
+})
 
 -- astro-ls requires a TypeScript SDK (else: "`typescript.tsdk` init option is
 -- required"). This project ships no local `typescript` (the Cloudflare static

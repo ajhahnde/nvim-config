@@ -105,6 +105,20 @@ return {
     opts = {},
   },
 
+  -- Read DOCX and other Office documents as extracted text. Keep this loaded
+  -- from startup because its file handlers must exist before a binary buffer
+  -- is read. Expose the LibreOffice CLI installed on macOS to the plugin.
+  {
+    "Konfekt/vim-office",
+    lazy = false,
+    init = function()
+      local libreoffice_bin = "/Applications/LibreOffice.app/Contents/MacOS"
+      if vim.fn.isdirectory(libreoffice_bin) == 1 then
+        vim.env.PATH = libreoffice_bin .. ":" .. vim.env.PATH
+      end
+    end,
+  },
+
   {
     "folke/todo-comments.nvim",
     event = "VimEnter",

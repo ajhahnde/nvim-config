@@ -20,6 +20,18 @@ automatically in the background, at most once every 24 hours.
 `lazy-lock.json` is committed intentionally so plugin versions stay
 reproducible across machines.
 
+## FlashOS Flash
+
+Files ending in `.fsh` use the `flash` filetype, built-in syntax highlighting,
+four-space indentation, Flash comments, LSP diagnostics/completion/navigation,
+and LSP formatting on save. The standalone `flash-language-server` executable
+must be available on `PATH`. Install it from a local FlashOS checkout with:
+
+```sh
+cd components/flash
+cargo install --path crates/flash-lsp --locked
+```
+
 ## Local configuration
 
 Project-specific commands, paths, and filetypes are kept in ignored files. The
