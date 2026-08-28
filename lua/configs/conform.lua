@@ -22,7 +22,7 @@ local options = {
     rust = { "rustfmt" },
     zig = { "zigfmt" },
     go = { "goimports", "gofmt" },
-    python = { "ruff_format", "ruff_organize_imports" },
+    python = { "ruff_organize_imports", "ruff_format" },
     -- gdformat ships in gdtoolkit (installed via mason).
     gdscript = { "gdformat" },
     -- DevOps / Cloud: `terraform fmt` for .tf / .tfvars.

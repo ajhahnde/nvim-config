@@ -267,7 +267,7 @@ return {
         markdown = {
           enabled = true,
           clear_in_insert_mode = false,
-          download_remote_images = true,
+          download_remote_images = false,
           only_render_image_at_cursor = false,
           filetypes = { "markdown", "vimwiki" },
         },
@@ -506,13 +506,17 @@ return {
         ["yaml.ansible"] = { "ansible_lint" },
       }
       local group = vim.api.nvim_create_augroup("UserLint", { clear = true })
-      vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave" }, {
+      vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
         group = group,
-        callback = function()
+        callback = function(args)
           -- Only lint filetypes that actually have a linter configured; skips
-          -- the no-op spawn attempt in every other buffer.
-          if lint.linters_by_ft[vim.bo.filetype] then
-            lint.try_lint()
+          -- the no-op spawn attempt in every other buffer. Lint in the event
+          -- buffer's context instead of relying on whichever buffer is current.
+          local filetype = vim.bo[args.buf].filetype
+          if lint.linters_by_ft[filetype] and vim.api.nvim_buf_is_loaded(args.buf) then
+            vim.api.nvim_buf_call(args.buf, function()
+              lint.try_lint()
+            end)
           end
         end,
       })
