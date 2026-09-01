@@ -3,9 +3,12 @@ return {
   install = { colorscheme = { "nvchad" } },
 
   checker = {
-    -- Updates are installed automatically once a day by configs.autoupdate.
-    -- A separate checker would duplicate the same network request at startup.
-    enabled = false,
+    -- Check once a day and notify, but keep updates explicit. This preserves
+    -- the committed lockfile and avoids changing running plugins underneath an
+    -- editor session.
+    enabled = true,
+    notify = true,
+    frequency = 24 * 60 * 60,
   },
 
   ui = {

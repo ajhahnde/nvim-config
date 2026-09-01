@@ -22,17 +22,15 @@ local function source_search_args(args)
   return args
 end
 
-map("n", ";", ":", { desc = "CMD enter command mode" })
-map("i", "jk", "<ESC>")
+map("n", ";", ":", { desc = "Enter command mode" })
+map("i", "jk", "<Esc>", { desc = "Exit insert mode" })
 
-map("n", "<Esc>", "<CMD>nohlsearch<CR>", { desc = "Clear search highlight" })
-map("n", "<leader>q", "<CMD>close<CR>", { desc = "Close window" })
+map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight" })
+map("n", "<leader>q", "<cmd>close<cr>", { desc = "Close window" })
 
--- Oil.nvim (Dateisystem wie Buffer bearbeiten)
-map("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+map("n", "-", "<cmd>Oil<cr>", { desc = "Open parent directory" })
 
--- Todo-comments
-map("n", "<leader>st", "<CMD>TodoTelescope<CR>", { desc = "Search TODOs" })
+map("n", "<leader>st", "<cmd>TodoTelescope<cr>", { desc = "Search TODOs" })
 
 map("n", "<leader>fF", function()
   require("telescope.builtin").find_files {
@@ -75,15 +73,19 @@ map("n", "<leader>zz", function()
   end
 end, { desc = "Toggle all function folds" })
 
--- Trouble (diagnostics list)
-map("n", "<leader>xx", "<CMD>Trouble diagnostics toggle<CR>", { desc = "Trouble diagnostics" })
-map("n", "<leader>xX", "<CMD>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Trouble buffer diagnostics" })
+map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<cr>", { desc = "Trouble diagnostics" })
+map("n", "<leader>xX", "<cmd>Trouble diagnostics toggle filter.buf=0<cr>", { desc = "Trouble buffer diagnostics" })
+map("n", "<leader>dl", vim.diagnostic.open_float, { desc = "Diagnostic details" })
 
--- Diffview (git review)
-map("n", "<leader>gd", "<CMD>DiffviewOpen<CR>", { desc = "Diffview open" })
-map("n", "<leader>gh", "<CMD>DiffviewFileHistory %<CR>", { desc = "Diffview file history" })
+map("n", "<leader>uh", function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = bufnr }, { bufnr = bufnr })
+end, { desc = "Toggle inlay hints" })
 
-local has_local_workflows, local_workflows = pcall(require, "ajhahnde.workflows")
-if has_local_workflows then
-  local_workflows.setup()
+map("n", "<leader>gd", "<cmd>DiffviewOpen<cr>", { desc = "Diffview open" })
+map("n", "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", { desc = "Diffview file history" })
+
+local local_workflows_path = vim.fs.joinpath(vim.fn.stdpath "config", "lua/local/workflows.lua")
+if vim.uv.fs_stat(local_workflows_path) then
+  require("local.workflows").setup()
 end

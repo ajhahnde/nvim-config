@@ -1,10 +1,6 @@
 ---@type ChadrcConfig
 local M = {}
 
--- Statusline modules are rendered for every window, including narrow vertical
--- splits. `vim.o.columns` is the width of the whole editor and therefore does
--- not tell us how much room a particular statusline has. Use the window for
--- which Neovim is currently evaluating the statusline instead.
 local function statusline_width()
   local win = tonumber(vim.g.statusline_winid)
   if win and vim.api.nvim_win_is_valid(win) then
@@ -44,16 +40,8 @@ M.base46 = {
   transparency = true,
   changed_themes = {
     onedark = {
-      -- hl_override only recolors highlight groups that already exist in the
-      -- statusline defaults; it silently no-ops on brand-new group names
-      -- (St_modified, St_git*, St_muted) since they aren't in that base set.
-      -- polish_hl merges unconditionally, so new groups actually get created.
       polish_hl = {
         statusline = {
-          -- With transparency=true, base46 sets statusline_bg to NONE for the
-          -- whole bar; these overrides give the statusline its own solid strip
-          -- so it stays visible against the terminal background
-          -- while the editor above remains transparent.
           StatusLine = { fg = "#abb2bf", bg = "#242832" },
           StatusLineNC = { fg = "#545862", bg = "#20242d" },
           St_file = { fg = "#abb2bf", bg = "#242832", bold = true },
@@ -75,7 +63,7 @@ M.base46 = {
       base_30 = {
         white = "#abb2bf",
         darker_black = "#1b1f23",
-        black = "#1c1e26", -- matching ghostty background
+        black = "#1c1e26",
         black2 = "#282c34",
         one_bg = "#2c313a",
         one_bg2 = "#353b45",
@@ -86,7 +74,7 @@ M.base46 = {
         light_grey = "#7f848e",
         red = "#e06c75",
         baby_pink = "#e06c75",
-        pink = "#9a86fd", -- Use purple for pink to avoid rosa
+        pink = "#9a86fd",
         line = "#2c313a",
         green = "#98c379",
         vibrant_green = "#98c379",
@@ -94,10 +82,10 @@ M.base46 = {
         blue = "#61afef",
         yellow = "#e5c07b",
         sun = "#e5c07b",
-        purple = "#9a86fd", -- Our pure purple
+        purple = "#9a86fd",
         dark_purple = "#8975e6",
-        teal = "#66b2ff", -- Our sky blue
-        cyan = "#66b2ff", -- Our sky blue
+        teal = "#66b2ff",
+        cyan = "#66b2ff",
         orange = "#d19a66",
         statusline_bg = "#242832",
         lightbg = "#313640",
@@ -158,11 +146,10 @@ M.ui = {
           return ""
         end
 
-        if not vim.b[bufnr].gitsigns_head or vim.b[bufnr].gitsigns_git_status then
+        local git_status = vim.b[bufnr].gitsigns_status_dict
+        if not vim.b[bufnr].gitsigns_head or not git_status then
           return ""
         end
-
-        local git_status = vim.b[bufnr].gitsigns_status_dict
 
         local show_counts = width >= 95
         local added = show_counts
@@ -201,10 +188,11 @@ M.ui = {
           { severity.HINT, "St_LspHints", "󰌵" },
           { severity.INFO, "St_LspInfo", "󰋼" },
         }
+        local diagnostic_counts = vim.diagnostic.count(bufnr)
         local result = {}
 
         for _, item in ipairs(counts) do
-          local count = #vim.diagnostic.get(bufnr, { severity = item[1] })
+          local count = diagnostic_counts[item[1]] or 0
           if count > 0 then
             result[#result + 1] = "%#" .. item[2] .. "# " .. item[3] .. " " .. count
           end
@@ -255,79 +243,34 @@ M.ui = {
 M.nvdash = {
   load_on_startup = true,
 
-  -- Header: Normaler Text ohne Emojis
   header = function()
-    math.randomseed(os.time())
-    local quotes = {
-      "Simplicity is the soul of efficiency.",
-      "First, solve the problem. Then, write the code.",
-      "Imagination is more important than knowledge. - Albert Einstein",
-      "If you can't explain it to a six-year-old, you don't understand it yourself. - Albert Einstein",
-      "A person who never made a mistake never tried anything new. - Albert Einstein",
-      "The important thing is not to stop questioning. - Albert Einstein",
-      "Look deep into nature, and then you will understand everything better. - Albert Einstein",
-      "If I have seen further than others, it is by standing upon the shoulders of giants. - Isaac Newton",
-      "Truth is ever to be found in simplicity. - Isaac Newton",
-      "Nothing in life is to be feared, it is only to be understood. - Marie Curie",
-      "Intelligence is the ability to adapt to change. - Stephen Hawking",
-      "Somewhere, something incredible is waiting to be known. - Carl Sagan",
-      "Science is a way of thinking much more than it is a body of knowledge. - Carl Sagan",
-      "We're made of star stuff. - Carl Sagan",
-      "Science and everyday life cannot and should not be separated. - Rosalind Franklin",
-      "What I cannot create, I do not understand. - Richard Feynman",
-      "The first principle is that you must not fool yourself and you are the easiest person to fool. - Richard Feynman",
-      "Chemistry begins in the stars. - Peter Atkins",
-      "Biology is the study of the complex things in the Universe. - Richard Dawkins",
-      "The Bible tells us how to go to Heaven, not how the heavens go. - Galileo Galilei",
-      "Nature is written in mathematical language. - Galileo Galilei",
-      "Medicine is a science of uncertainty and an art of probability. - William Osler",
-      "In the center of all rests the Sun. - Nicolaus Copernicus",
-      "The opposite of a profound truth may well be another profound truth. - Niels Bohr",
-      "The way to get good ideas is to get lots of ideas and throw the bad ones away. - Linus Pauling",
-      "Science is what we understand well enough to explain to a computer. - Donald Knuth",
-      "The best way to predict the future is to invent it. - Alan Kay",
-      "Simplicity is prerequisite for reliability. - Edsger W. Dijkstra",
-      "Everything is theoretically impossible, until it is done. - Robert A. Heinlein",
-      "The science of today is the technology of tomorrow. - Edward Teller",
-      "An investment in knowledge pays the best interest. - Benjamin Franklin",
-      "Eppur si muove (And yet it moves). - Galileo Galilei",
-    }
-    return {
-      "",
-      quotes[math.random(#quotes)],
-      "",
-    }
+    return { "", "NEOVIM", "" }
   end,
 
-  -- Mitte & Unten: Datum weiter nach unten verschoben
   buttons = function()
-    local btns = {}
+    local buttons = {}
 
-    -- Abstand zwischen Quote und Datum (reduziert für besseres Fitting)
-    for i = 1, 8 do
-      table.insert(btns, { txt = " ", no_gap = true })
+    for _ = 1, 8 do
+      buttons[#buttons + 1] = { txt = " ", no_gap = true }
     end
 
-    -- Datum und Zeit (Spaces am Anfang entfernt für Zentrierung)
-    table.insert(
-      btns,
-      { txt = "󰸗  " .. os.date "%A, %d. %B %Y" .. "   󱑊  " .. os.date "%H:%M", hl = "NvdashAscii" }
-    )
+    buttons[#buttons + 1] = {
+      txt = "󰸗  " .. os.date "%A, %d. %B %Y" .. "   󱑊  " .. os.date "%H:%M",
+      hl = "NvdashAscii",
+    }
 
-    -- Abstand bis zu den Buttons
-    for i = 1, 2 do
-      table.insert(btns, { txt = " ", no_gap = true })
+    for _ = 1, 2 do
+      buttons[#buttons + 1] = { txt = " ", no_gap = true }
     end
 
-    -- Horizontale Buttons ganz unten
-    table.insert(btns, {
+    buttons[#buttons + 1] = {
       multicolumn = true,
       { txt = "  Find File", keys = "ff", cmd = "Telescope find_files", hl = "NvdashButtons", pad = 4 },
       { txt = "󰈭  Find Word", keys = "fw", cmd = "Telescope live_grep", hl = "NvdashButtons", pad = 4 },
       { txt = "  Mappings", keys = "ch", cmd = "NvCheatsheet", hl = "NvdashButtons" },
-    })
+    }
 
-    return btns
+    return buttons
   end,
 }
 

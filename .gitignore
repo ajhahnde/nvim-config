@@ -5,5 +5,5 @@
 .nvim/
 Session.vim
 
-# Private project integrations
-/lua/ajhahnde/
+# Machine-local integrations
+/lua/local/

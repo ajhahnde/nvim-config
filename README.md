@@ -1,39 +1,49 @@
 # Neovim configuration
 
-Personal Neovim configuration based on [NvChad](https://nvchad.com/) and
-[lazy.nvim](https://github.com/folke/lazy.nvim).
+An NvChad-based setup focused on fast navigation, broad language support, and
+predictable project tooling.
 
-## Installation
+## Interface
 
-Back up an existing configuration, then clone this repository:
+- Transparent OneDark theme with a responsive statusline
+- Centered, content-sized file explorer and an editable Oil directory view
+- Telescope pickers, structured notifications, and command-line popups
+- Function-only Tree-sitter folds with buffer-local fold controls
+- Project sessions scoped by working directory and Git branch
+- Kitty graphics rendering for PNG, JPEG, GIF, WebP, and AVIF in Ghostty
+- Inline and browser-based Markdown rendering
 
-```sh
-git clone https://github.com/ajhahnde/nvim-config.git ~/.config/nvim
-nvim
-```
+## Editing
 
-Neovim installs the configured plugins on first launch. External language
-servers, formatters, and linters are managed through Mason where configured.
-Plugins (including Tree-sitter parsers) and Mason tools are updated
-automatically in the background, at most once every 24 hours.
+- Format-on-save with Conform and language-specific formatter selection
+- Asynchronous linting for shell, Docker, Terraform, Ansible, and GDScript
+- Completion from LSP, snippets, buffers, paths, and inline suggestions
+- Surround operations, automatic tag pairing, and project-wide replacement
+- Function-aware jumping, diagnostics views, inlay hints, and TODO search
+- Prose-friendly wrapping and spell checking for Markdown, text, and commits
 
-`lazy-lock.json` is committed intentionally so plugin versions stay
-reproducible across machines.
+## Language support
 
-## FlashOS Flash
+- Web: JavaScript, TypeScript, TSX, Astro, HTML, CSS, JSON, Emmet
+- Systems: C, C++, Rust, Zig, Go, assembly, Make
+- Scripting: Python, Bash, Lua
+- Infrastructure: Docker, Compose, Terraform, HCL, Helm, Ansible, YAML, TOML
+- Godot: GDScript, scenes, resources, shaders, XML, and SVG
+- Dedicated `.fsh` detection, syntax, indentation, completion, diagnostics,
+  and formatting
 
-Files ending in `.fsh` use the `flash` filetype, built-in syntax highlighting,
-four-space indentation, Flash comments, LSP diagnostics/completion/navigation,
-and LSP formatting on save. The standalone `flash-language-server` executable
-must be available on `PATH`. Install it from a local FlashOS checkout with:
+## Git workflow
 
-```sh
-cd components/flash
-cargo install --path crates/flash-lsp --locked
-```
+- Inline hunk navigation, preview, staging, reset, and blame
+- Repository status and commands through Fugitive
+- File and repository history through Diffview
 
-## Local configuration
+## Tool management
 
-Project-specific commands, paths, and filetypes are kept in ignored files. The
-public configuration loads these additions only when they exist, so a fresh
-clone works without them.
+- Reproducible plugin revisions through `lazy-lock.json`
+- Daily update checks without automatic lockfile changes
+- Automatic installation of missing Tree-sitter parsers and Mason tools
+- Explicit upgrades through `:Lazy update` and `:MasonToolsUpdate`
+
+Machine-local integrations live under `lua/local/` and remain outside version
+control.
