@@ -18,7 +18,7 @@ end
 local function lazy_git_error(action, result)
   lazy_git_running = false
   local output = vim.trim(result.stderr or result.stdout or "")
-  local message = action .. " fehlgeschlagen"
+  local message = action .. " failed"
   lazy_git_notify(output == "" and message or message .. ":\n" .. output, vim.log.levels.ERROR)
 end
 
@@ -45,31 +45,34 @@ vim.api.nvim_create_autocmd("User", {
           return
         end
         if diff.code ~= 1 then
-          lazy_git_error("Prüfen von lazy-lock.json", diff)
+          lazy_git_error("Checking lazy-lock.json", diff)
           return
         end
 
         lazy_git({ "add", "--", "lazy-lock.json" }, function(add)
           if add.code ~= 0 then
-            lazy_git_error("Stagen von lazy-lock.json", add)
+            lazy_git_error("Staging lazy-lock.json", add)
             return
           end
 
-          lazy_git({ "commit", "-m", "chore(deps): update lazy-lock.json [automated]", "--", "lazy-lock.json" }, function(commit)
-            if commit.code ~= 0 then
-              lazy_git_error("Commit von lazy-lock.json", commit)
-              return
-            end
-
-            lazy_git({ "push" }, function(push)
-              lazy_git_running = false
-              if push.code ~= 0 then
-                lazy_git_error("Push des Lockfile-Commits", push)
+          lazy_git(
+            { "commit", "-m", "chore(deps): update lazy-lock.json [automated]", "--", "lazy-lock.json" },
+            function(commit)
+              if commit.code ~= 0 then
+                lazy_git_error("Committing lazy-lock.json", commit)
                 return
               end
-              lazy_git_notify "lazy-lock.json wurde committed und gepusht"
-            end)
-          end)
+
+              lazy_git({ "push" }, function(push)
+                lazy_git_running = false
+                if push.code ~= 0 then
+                  lazy_git_error("Pushing the lockfile commit", push)
+                  return
+                end
+                lazy_git_notify "lazy-lock.json was committed and pushed"
+              end)
+            end
+          )
         end)
       end)
     end)
