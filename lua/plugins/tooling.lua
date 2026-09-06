@@ -171,12 +171,21 @@ return {
     "hrsh7th/nvim-cmp",
     opts = function(_, opts)
       local cmp = require "cmp"
-      opts.mapping["<Tab>"] = cmp.mapping(function(fallback)
+      opts.mapping["<Up>"] = cmp.mapping(function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        else
+          fallback()
+        end
+      end, { "i", "s" })
+      opts.mapping["<Down>"] = cmp.mapping(function(fallback)
         if cmp.visible() then
           cmp.select_next_item()
-          return
+        else
+          fallback()
         end
-
+      end, { "i", "s" })
+      opts.mapping["<Tab>"] = cmp.mapping(function(fallback)
         local has_preview, preview = pcall(require, "supermaven-nvim.completion_preview")
         if has_preview and preview.has_suggestion() then
           preview.on_accept_suggestion()
