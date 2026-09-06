@@ -2,12 +2,38 @@ require "nvchad.autocmds"
 
 local general_group = vim.api.nvim_create_augroup("UserGeneral", { clear = true })
 local folding_group = vim.api.nvim_create_augroup("UserFunctionFolding", { clear = true })
+local maintenance_group = vim.api.nvim_create_augroup("UserDailyMaintenance", { clear = true })
 local lazy_git_group = vim.api.nvim_create_augroup("UserLazyGit", { clear = true })
 local markdown_group = vim.api.nvim_create_augroup("UserMarkdown", { clear = true })
 local prose_group = vim.api.nvim_create_augroup("UserProse", { clear = true })
 
 local config_dir = vim.fn.stdpath "config"
 local lazy_git_running = false
+
+local function run_daily_maintenance()
+  local stamp_file = vim.fn.stdpath "state" .. "/daily-maintenance"
+  local today = os.date "%Y-%m-%d"
+  local stamp = vim.uv.fs_stat(stamp_file) and vim.fn.readfile(stamp_file, "", 1)[1]
+
+  if stamp == today then
+    return
+  end
+
+  vim.fn.mkdir(vim.fs.dirname(stamp_file), "p")
+  vim.fn.writefile({ today }, stamp_file)
+
+  local mason_tool_installer = require "mason-tool-installer"
+  require("lazy").update { show = false }
+  mason_tool_installer.check_install(true)
+end
+
+vim.api.nvim_create_autocmd("UIEnter", {
+  group = maintenance_group,
+  once = true,
+  callback = function()
+    vim.defer_fn(run_daily_maintenance, 3000)
+  end,
+})
 
 local function lazy_git_notify(message, level)
   vim.schedule(function()

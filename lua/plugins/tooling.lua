@@ -144,10 +144,9 @@ return {
     event = "VeryLazy",
     opts = {
       ensure_installed = mason_tools,
-      auto_update = false,
-      run_on_start = true,
-      start_delay = 3000,
-      debounce_hours = 24,
+      auto_update = true,
+      -- Daily maintenance invokes the updater explicitly after UIEnter.
+      run_on_start = false,
     },
   },
 

@@ -41,9 +41,10 @@ predictable project tooling.
 ## Tool management
 
 - Reproducible plugin revisions through `lazy-lock.json`
-- Daily update checks without automatic lockfile changes
+- Daily automatic plugin and managed Mason tool updates
 - Automatic installation of missing Tree-sitter parsers and Mason tools
-- Explicit upgrades through `:Lazy update` and `:MasonToolsUpdate`
+- Refreshed, automatically committed plugin lockfile after updates
+- Manual upgrades remain available through `:Lazy update` and `:MasonToolsUpdate`
 
 Machine-local integrations live under `lua/local/` and remain outside version
 control.

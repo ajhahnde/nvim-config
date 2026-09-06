@@ -2,14 +2,8 @@ return {
   defaults = { lazy = true },
   install = { colorscheme = { "nvchad" } },
 
-  checker = {
-    -- Check once a day and notify, but keep updates explicit. This preserves
-    -- the committed lockfile and avoids changing running plugins underneath an
-    -- editor session.
-    enabled = true,
-    notify = true,
-    frequency = 24 * 60 * 60,
-  },
+  -- Daily updates are started after UIEnter in lua/autocmds.lua.
+  checker = { enabled = false },
 
   ui = {
     icons = {
