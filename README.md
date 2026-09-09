@@ -29,7 +29,7 @@ predictable project tooling.
 - Scripting: Python, Bash, Lua
 - Infrastructure: Docker, Compose, Terraform, HCL, Helm, Ansible, YAML, TOML
 - Godot: GDScript, scenes, resources, shaders, XML, and SVG
-- Dedicated `.fsh` detection, syntax, indentation, completion, diagnostics,
+- Dedicated `.opaal` detection, syntax, indentation, completion, diagnostics,
   and formatting
 
 ## Git workflow

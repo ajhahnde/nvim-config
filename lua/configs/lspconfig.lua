@@ -14,7 +14,7 @@ local servers = {
   "dockerls",
   "docker_compose_language_service",
   "emmet_language_server",
-  "flash",
+  "opaal",
   "gdscript",
   "gopls",
   "helm_ls",
@@ -31,10 +31,18 @@ local servers = {
   "zls",
 }
 
-vim.lsp.config("flash", {
-  cmd = { "flash-language-server" },
-  filetypes = { "flash" },
-  root_markers = { ".git" },
+local opaal_language_server = vim.fn.exepath "opaal-language-server"
+if opaal_language_server == "" and vim.env.HOME then
+  local development_server = vim.fs.joinpath(vim.env.HOME, "opaal", "target", "debug", "opaal-language-server")
+  if vim.fn.executable(development_server) == 1 then
+    opaal_language_server = development_server
+  end
+end
+
+vim.lsp.config("opaal", {
+  cmd = { opaal_language_server ~= "" and opaal_language_server or "opaal-language-server" },
+  filetypes = { "opaal" },
+  root_markers = { "opaal.toml", ".git" },
 })
 
 local mason_tsdk =

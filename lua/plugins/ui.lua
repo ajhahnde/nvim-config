@@ -18,6 +18,20 @@ end
 
 return {
   {
+    "nvim-tree/nvim-web-devicons",
+    opts = {
+      override_by_extension = {
+        opaal = {
+          icon = "󰽘",
+          color = "#284b63",
+          cterm_color = "24",
+          name = "Opaal",
+        },
+      },
+    },
+  },
+
+  {
     "nvim-tree/nvim-tree.lua",
     init = function()
       require("configs.treefloat").setup()
