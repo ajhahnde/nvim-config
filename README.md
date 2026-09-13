@@ -30,7 +30,7 @@ predictable project tooling.
 - Infrastructure: Docker, Compose, Terraform, HCL, Helm, Ansible, YAML, TOML
 - Godot: GDScript, scenes, resources, shaders, XML, and SVG
 - Dedicated `.opaal` detection, syntax, indentation, completion, diagnostics,
-  and formatting
+  and formatting; an `opaal.toml` selects project analysis when present
 
 ## Git workflow
 

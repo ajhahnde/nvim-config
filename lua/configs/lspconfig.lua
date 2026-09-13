@@ -31,18 +31,34 @@ local servers = {
   "zls",
 }
 
-local opaal_language_server = vim.fn.exepath "opaal-language-server"
-if opaal_language_server == "" and vim.env.HOME then
+local opaal_language_server = ""
+if vim.env.HOME then
   local development_server = vim.fs.joinpath(vim.env.HOME, "opaal", "target", "debug", "opaal-language-server")
   if vim.fn.executable(development_server) == 1 then
     opaal_language_server = development_server
   end
+end
+if opaal_language_server == "" then
+  opaal_language_server = vim.fn.exepath "opaal-language-server"
 end
 
 vim.lsp.config("opaal", {
   cmd = { opaal_language_server ~= "" and opaal_language_server or "opaal-language-server" },
   filetypes = { "opaal" },
   root_markers = { "opaal.toml", ".git" },
+  before_init = function(params, config)
+    if not config.root_dir then
+      return
+    end
+
+    local manifest = vim.fs.joinpath(config.root_dir, "opaal.toml")
+    local stat = vim.uv.fs_lstat(manifest)
+    if stat and stat.type == "file" then
+      params.initializationOptions = {
+        opaal = { projectManifest = vim.uri_from_fname(manifest) },
+      }
+    end
+  end,
 })
 
 local mason_tsdk =

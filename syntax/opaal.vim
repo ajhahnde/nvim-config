@@ -6,6 +6,7 @@ if exists("b:current_syntax")
 endif
 
 syntax case match
+syntax sync minlines=100
 
 " Reserved words from the OPAAL 1.0 language contract.
 syntax keyword opaalKeyword action break catch continue def else enum export for
@@ -19,7 +20,7 @@ syntax keyword opaalType List Record Table Range Status Error Function Closure
 syntax keyword opaalConstraint Equal Ordered
 
 " The core command namespace.
-syntax keyword opaalBuiltin cd pwd which command exit check decode from encode to
+syntax keyword opaalBuiltin cd pwd which exit check decode from encode to
 syntax keyword opaalBuiltin first last collect length lines each where select get
 syntax keyword opaalBuiltin update sort ls open save jobs fg bg wait kill help
 
@@ -31,17 +32,18 @@ syntax match opaalComment "\%(^\|\s\)\zs#.*$" contains=opaalTodo,@Spell
 syntax match opaalDocComment "^\s*##\%($\|\s.*$\)" contains=opaalTodo,@Spell
 syntax keyword opaalTodo TODO FIXME XXX NOTE contained
 
-" Single quotes are exact text. Double quotes allow escapes and expansion.
-syntax region opaalSingleString start=+'+ end=+'+ oneline
-syntax match opaalEscape +\\\%(\\\|"\|\$\|[nrt0]\|u{[0-9A-Fa-f]\+}\)+ contained
-syntax match opaalVariable "\$[A-Za-z_][A-Za-z0-9_]*" containedin=ALLBUT,opaalSingleString,opaalComment,opaalDocComment
-syntax match opaalExpansion "\${" containedin=ALLBUT,opaalSingleString,opaalComment,opaalDocComment
-syntax match opaalCommandSubstitution "\$(" containedin=ALLBUT,opaalSingleString,opaalComment,opaalDocComment
-syntax region opaalDoubleString start=+"+ skip=+\\.+ end=+"+ oneline contains=opaalEscape,opaalVariable,opaalExpansion,opaalCommandSubstitution
+" Single quotes are exact text. Double quotes allow escapes and braced interpolation.
+syntax region opaalSingleString start=+'+ end=+'
+syntax match opaalEscape +\\\%(\\\|"\|[nrt0]\|u{[0-9A-Fa-f]\{1,6}}\)+ contained
+syntax cluster opaalExpression contains=opaalKeyword,opaalBoolean,opaalNull,opaalType,opaalConstraint,opaalBuiltin,opaalNumber,opaalSingleString,opaalDoubleString,opaalOperator,opaalDelimiter,opaalBraceBlock
+syntax region opaalInterpolation matchgroup=opaalInterpolationDelimiter start=+{+ end=+}+ contained contains=@opaalExpression
+syntax match opaalEscapedBrace +{{\|}}+ contained
+syntax region opaalDoubleString start=+"+ end=+"+ contains=opaalEscape,opaalInterpolation,opaalEscapedBrace
 
 " Operators and structural delimiters from the lexer contract.
 syntax match opaalOperator "\%(\.\.\.\|\.\.=\||&\|&&\|||\|>>\|>&\|==\|!=\|<=\|>=\|->\|=>\|\.\.\|[;|&=<>+*/%!,.:^-]\)"
 syntax match opaalDelimiter "[(){}\[\]]"
+syntax region opaalBraceBlock matchgroup=opaalDelimiter start=+{+ end=+}+ contained contains=@opaalExpression
 
 highlight default link opaalKeyword Keyword
 highlight default link opaalBoolean Boolean
@@ -56,9 +58,9 @@ highlight default link opaalTodo Todo
 highlight default link opaalSingleString String
 highlight default link opaalDoubleString String
 highlight default link opaalEscape SpecialChar
-highlight default link opaalVariable Identifier
-highlight default link opaalExpansion Special
-highlight default link opaalCommandSubstitution Special
+highlight default link opaalInterpolation Identifier
+highlight default link opaalInterpolationDelimiter Special
+highlight default link opaalEscapedBrace SpecialChar
 highlight default link opaalOperator Operator
 highlight default link opaalDelimiter Delimiter
 
