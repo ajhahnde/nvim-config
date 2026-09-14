@@ -31,15 +31,12 @@ local servers = {
   "zls",
 }
 
-local opaal_language_server = ""
-if vim.env.HOME then
+local opaal_language_server = vim.fn.exepath "opaal-language-server"
+if opaal_language_server == "" and vim.env.HOME then
   local development_server = vim.fs.joinpath(vim.env.HOME, "opaal", "target", "debug", "opaal-language-server")
   if vim.fn.executable(development_server) == 1 then
     opaal_language_server = development_server
   end
-end
-if opaal_language_server == "" then
-  opaal_language_server = vim.fn.exepath "opaal-language-server"
 end
 
 vim.lsp.config("opaal", {
