@@ -33,7 +33,7 @@ syntax match opaalDocComment "^\s*##\%($\|\s.*$\)" contains=opaalTodo,@Spell
 syntax keyword opaalTodo TODO FIXME XXX NOTE contained
 
 " Single quotes are exact text. Double quotes allow escapes and braced interpolation.
-syntax region opaalSingleString start=+'+ end=+'
+syntax region opaalSingleString start=/'/  end=/'/
 syntax match opaalEscape +\\\%(\\\|"\|[nrt0]\|u{[0-9A-Fa-f]\{1,6}}\)+ contained
 syntax cluster opaalExpression contains=opaalKeyword,opaalBoolean,opaalNull,opaalType,opaalConstraint,opaalBuiltin,opaalNumber,opaalSingleString,opaalDoubleString,opaalOperator,opaalDelimiter,opaalBraceBlock
 syntax region opaalInterpolation matchgroup=opaalInterpolationDelimiter start=+{+ end=+}+ contained contains=@opaalExpression
