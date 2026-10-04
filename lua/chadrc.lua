@@ -130,7 +130,7 @@ M.ui = {
         local file = require("nvchad.stl.utils").file()
         local width = statusline_width()
         local max_name_width = width < 50 and 8 or width < 70 and 12 or width < 100 and 18 or 28
-        local name = shorten(file[2], max_name_width)
+        local name = shorten(file[2], max_name_width):gsub("%%", "%%%%")
         return "%#St_file#" .. file[1] .. " " .. name
       end,
       modified = function()
@@ -164,7 +164,8 @@ M.ui = {
             and (git_status.removed and git_status.removed ~= 0)
             and ("%#St_gitRemoved# -" .. git_status.removed)
           or ""
-        local branch_name = "%#St_gitIcons#   " .. shorten(git_status.head, width < 95 and 10 or 18)
+        local branch_name = "%#St_gitIcons#   "
+          .. shorten(git_status.head, width < 95 and 10 or 18):gsub("%%", "%%%%")
 
         return branch_name .. added .. changed .. removed
       end,
@@ -173,7 +174,7 @@ M.ui = {
           return ""
         end
 
-        return "%#St_LspMsg#" .. require("nvchad.stl.utils").lsp_msg()
+        return "%#St_LspMsg#" .. require("nvchad.stl.utils").lsp_msg():gsub("%%", "%%%%")
       end,
       diagnostics = function()
         if statusline_width() < 65 then
@@ -208,7 +209,7 @@ M.ui = {
 
         local bufnr = require("nvchad.stl.utils").stbufnr()
         for _, client in ipairs(vim.lsp.get_clients { bufnr = bufnr }) do
-          local name = width >= 110 and " " .. client.name or ""
+          local name = width >= 110 and " " .. client.name:gsub("%%", "%%%%") or ""
           return "%#St_Lsp#  󰒋" .. name
         end
 

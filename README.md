@@ -44,8 +44,18 @@ predictable project tooling.
 - Reproducible plugin revisions through `lazy-lock.json`
 - Daily automatic plugin and managed Mason tool updates
 - Automatic installation of missing Tree-sitter parsers and Mason tools
-- Refreshed, automatically committed plugin lockfile after updates
+- Plugin lockfile refreshed after updates; commit and push explicitly with
+  `:LazyLockPush` (pushes the current branch, including other pending commits)
 - Manual upgrades remain available through `:Lazy update` and `:MasonToolsUpdate`
 
 Machine-local integrations live under `lua/local/` and remain outside version
 control.
+
+## Verification
+
+With plugins and the Python Tree-sitter parser installed, run the regression
+check without network updates or Git operations:
+
+```sh
+nvim --clean --headless -i NONE -n -l tests/config.lua
+```

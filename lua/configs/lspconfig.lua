@@ -60,15 +60,18 @@ vim.lsp.config("opaal", {
 
 local mason_tsdk =
   vim.fs.joinpath(vim.fn.stdpath "data", "mason/packages/astro-language-server/node_modules/typescript/lib")
-local local_tsdk = vim.fs.find("node_modules/typescript/lib", { upward = true, type = "directory" })[1]
-local astro_tsdk = local_tsdk or (vim.fn.isdirectory(mason_tsdk) == 1 and mason_tsdk or nil)
 
 vim.lsp.config("astro", {
-  init_options = {
-    typescript = {
-      tsdk = astro_tsdk,
-    },
-  },
+  before_init = function(_, config)
+    local tsdk = config.root_dir and require("lspconfig.util").get_typescript_server_path(config.root_dir) or ""
+    if tsdk == "" and vim.fn.isdirectory(mason_tsdk) == 1 then
+      tsdk = mason_tsdk
+    end
+
+    config.init_options = config.init_options or {}
+    config.init_options.typescript = config.init_options.typescript or {}
+    config.init_options.typescript.tsdk = tsdk ~= "" and tsdk or nil
+  end,
 })
 
 vim.lsp.config("bashls", {

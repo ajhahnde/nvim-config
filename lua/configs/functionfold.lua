@@ -26,7 +26,7 @@ local function compute(bufnr)
   end
   local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok or not parser then
-    return { tick = tick, level = {}, starts = {} }
+    return { tick = tick, level = {}, starts = {}, missing_parser = true }
   end
   local trees = parser:parse()
   local root = trees[1] and trees[1]:root()
@@ -59,6 +59,30 @@ end
 
 function M.clear_cache(bufnr)
   cache[bufnr] = nil
+end
+
+function M.refresh(bufnr)
+  if not cache[bufnr] or not cache[bufnr].missing_parser then
+    return
+  end
+
+  local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
+  if not ok or not parser then
+    return
+  end
+
+  M.clear_cache(bufnr)
+  for _, window in ipairs(vim.api.nvim_list_wins()) do
+    if
+      vim.api.nvim_win_get_buf(window) == bufnr
+      and vim.wo[window].foldmethod == "expr"
+      and vim.wo[window].foldexpr == "v:lua.require'configs.functionfold'.foldexpr()"
+    then
+      vim.api.nvim_win_call(window, function()
+        vim.cmd "normal! zx"
+      end)
+    end
+  end
 end
 
 function M.foldexpr()

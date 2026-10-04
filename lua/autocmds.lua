@@ -3,7 +3,7 @@ require "nvchad.autocmds"
 local general_group = vim.api.nvim_create_augroup("UserGeneral", { clear = true })
 local folding_group = vim.api.nvim_create_augroup("UserFunctionFolding", { clear = true })
 local maintenance_group = vim.api.nvim_create_augroup("UserDailyMaintenance", { clear = true })
-local lazy_git_group = vim.api.nvim_create_augroup("UserLazyGit", { clear = true })
+vim.api.nvim_create_augroup("UserLazyGit", { clear = true })
 local markdown_group = vim.api.nvim_create_augroup("UserMarkdown", { clear = true })
 local prose_group = vim.api.nvim_create_augroup("UserProse", { clear = true })
 
@@ -19,12 +19,69 @@ local function run_daily_maintenance()
     return
   end
 
-  vim.fn.mkdir(vim.fs.dirname(stamp_file), "p")
-  vim.fn.writefile({ today }, stamp_file)
-
   local mason_tool_installer = require "mason-tool-installer"
-  require("lazy").update { show = false }
-  mason_tool_installer.check_install(true)
+  local registry = require "mason-registry"
+  local plugins_done, tools_done, failed = false, false, false
+  local completion_autocmd
+
+  local function on_failure()
+    failed = true
+  end
+
+  local function cleanup()
+    registry:off("package:install:failed", on_failure)
+    registry:off("update:failed", on_failure)
+    if completion_autocmd then
+      vim.api.nvim_del_autocmd(completion_autocmd)
+      completion_autocmd = nil
+    end
+  end
+
+  local function finish()
+    if not plugins_done or not tools_done then
+      return
+    end
+
+    cleanup()
+    if not failed then
+      vim.fn.mkdir(vim.fs.dirname(stamp_file), "p")
+      vim.fn.writefile({ today }, stamp_file)
+    end
+  end
+
+  registry:on("package:install:failed", on_failure)
+  registry:on("update:failed", on_failure)
+  completion_autocmd = vim.api.nvim_create_autocmd("User", {
+    group = maintenance_group,
+    pattern = "MasonToolsUpdateCompleted",
+    once = true,
+    callback = function()
+      completion_autocmd = nil
+      tools_done = true
+      finish()
+    end,
+  })
+
+  local ok, err = pcall(function()
+    local runner = require("lazy").update { show = false }
+    runner:wait(function()
+      -- Lazy finishes its runner even when individual plugin tasks fail.
+      for _, plugin in pairs(runner._plugins) do
+        for _, task in ipairs(plugin._.tasks or {}) do
+          failed = failed or task:has_errors()
+        end
+      end
+      plugins_done = true
+      finish()
+    end)
+    mason_tool_installer.check_install(true)
+  end)
+
+  if not ok then
+    failed = true
+    cleanup()
+    vim.notify("Daily maintenance failed:\n" .. tostring(err), vim.log.levels.ERROR)
+  end
 end
 
 vim.api.nvim_create_autocmd("UIEnter", {
@@ -55,55 +112,52 @@ local function lazy_git(args, callback)
   }, callback)
 end
 
-vim.api.nvim_create_autocmd("User", {
-  group = lazy_git_group,
-  pattern = "LazyUpdate",
-  callback = function()
-    if lazy_git_running then
-      return
-    end
-    lazy_git_running = true
+vim.api.nvim_create_user_command("LazyLockPush", function()
+  if lazy_git_running then
+    return
+  end
+  lazy_git_running = true
 
-    vim.schedule(function()
-      lazy_git({ "diff", "--quiet", "HEAD", "--", "lazy-lock.json" }, function(diff)
-        if diff.code == 0 then
-          lazy_git_running = false
+  local function push_lockfile()
+    lazy_git({ "push" }, function(push)
+      lazy_git_running = false
+      if push.code ~= 0 then
+        lazy_git_error("Pushing the current branch", push)
+        return
+      end
+      lazy_git_notify "Current branch pushed with lazy-lock.json"
+    end)
+  end
+
+  vim.schedule(function()
+    lazy_git({ "diff", "--quiet", "HEAD", "--", "lazy-lock.json" }, function(diff)
+      if diff.code == 0 then
+        push_lockfile()
+        return
+      end
+      if diff.code ~= 1 then
+        lazy_git_error("Checking lazy-lock.json", diff)
+        return
+      end
+
+      lazy_git({ "add", "--", "lazy-lock.json" }, function(add)
+        if add.code ~= 0 then
+          lazy_git_error("Staging lazy-lock.json", add)
           return
         end
-        if diff.code ~= 1 then
-          lazy_git_error("Checking lazy-lock.json", diff)
-          return
-        end
 
-        lazy_git({ "add", "--", "lazy-lock.json" }, function(add)
-          if add.code ~= 0 then
-            lazy_git_error("Staging lazy-lock.json", add)
+        lazy_git({ "commit", "-m", "chore(deps): update lazy-lock.json", "--", "lazy-lock.json" }, function(commit)
+          if commit.code ~= 0 then
+            lazy_git_error("Committing lazy-lock.json", commit)
             return
           end
 
-          lazy_git(
-            { "commit", "-m", "chore(deps): update lazy-lock.json [automated]", "--", "lazy-lock.json" },
-            function(commit)
-              if commit.code ~= 0 then
-                lazy_git_error("Committing lazy-lock.json", commit)
-                return
-              end
-
-              lazy_git({ "push" }, function(push)
-                lazy_git_running = false
-                if push.code ~= 0 then
-                  lazy_git_error("Pushing the lockfile commit", push)
-                  return
-                end
-                lazy_git_notify "lazy-lock.json was committed and pushed"
-              end)
-            end
-          )
+          push_lockfile()
         end)
       end)
     end)
-  end,
-})
+  end)
+end, { desc = "Commit lockfile changes and push the current branch" })
 
 vim.api.nvim_create_autocmd("FileType", {
   group = prose_group,
@@ -124,11 +178,19 @@ vim.api.nvim_create_autocmd("FileType", {
       return
     end
 
+    require("configs.functionfold").clear_cache(args.buf)
     vim.opt_local.foldmethod = "expr"
     vim.opt_local.foldexpr = "v:lua.require'configs.functionfold'.foldexpr()"
     vim.opt_local.foldlevel = 99
     vim.opt_local.foldenable = true
     vim.opt_local.foldcolumn = "1"
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "BufEnter", "CursorHold" }, {
+  group = folding_group,
+  callback = function(args)
+    require("configs.functionfold").refresh(args.buf)
   end,
 })
 
