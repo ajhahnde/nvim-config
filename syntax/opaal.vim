@@ -8,9 +8,11 @@ endif
 syntax case match
 syntax sync minlines=100
 
-" Reserved words from the OPAAL 1.0 language contract.
+" Reserved words from the OPAAL language contract.
 syntax keyword opaalKeyword action break catch continue def else enum export for
 syntax keyword opaalKeyword if import in let match mut return task throw try type unset while
+" `as` is contextual; ordinary bindings with that name remain identifiers.
+syntax match opaalKeyword "\%(\<import\s\+\%(\%(std\|project\)::[A-Za-z_][A-Za-z0-9_]*\|'[^']\+'\)\s\+\)\@<=as\>"
 syntax keyword opaalBoolean true false
 syntax keyword opaalNull null
 

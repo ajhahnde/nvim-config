@@ -183,6 +183,30 @@ vim.treesitter.get_parser = get_parser
 vim.api.nvim_exec_autocmds("CursorHold", {})
 assert(vim.fn.foldlevel(1) == 1 and vim.fn.foldlevel(2) == 1 and vim.fn.foldlevel(4) == 0)
 
+vim.cmd "enew!"
+vim.cmd "syntax enable"
+vim.bo.filetype = "opaal"
+local syntax_cases = {
+  { "import std::io as io", "as", "opaalKeyword" },
+  { "  import project::context\tas context", "as", "opaalKeyword" },
+  { "import './as module.opaal' as module", "as module", "opaalSingleString" },
+  { "import './as module.opaal' as module", "as module$", "opaalKeyword" },
+  { "import std::io as as", "as$", "" },
+  { "let as = 1", "as", "" },
+  { "let aside = 1", "aside", "" },
+  { "# import std::io as io", "as", "opaalComment" },
+  { '"import std::io as io"', "as", "opaalDoubleString" },
+  { "import std::io # as io", "as", "opaalComment" },
+}
+vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.tbl_map(function(case)
+  return case[1]
+end, syntax_cases))
+for row, case in ipairs(syntax_cases) do
+  local column = assert(case[1]:find(case[2]))
+  local group = vim.fn.synIDattr(vim.fn.synID(row, column, 1), "name")
+  assert(group == case[3], "Unexpected OPAAL highlight for " .. case[1] .. ": " .. group)
+end
+
 vim.fn.delete(test_dir, "rf")
-print "Config regressions passed: statusline, Astro, maintenance, folding"
+print "Config regressions passed: statusline, Astro, maintenance, folding, OPAAL syntax"
 vim.cmd "qa!"
