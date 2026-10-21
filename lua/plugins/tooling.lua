@@ -35,7 +35,7 @@ local mason_tools = {
   "astro-language-server",
   "bash-language-server",
   "clang-format",
-  "clangd",
+  -- Use the system clangd: Mason's binary is unavailable on Linux ARM64.
   "css-lsp",
   "docker-compose-language-service",
   "dockerfile-language-server",
